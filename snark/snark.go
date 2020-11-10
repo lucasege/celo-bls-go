@@ -26,6 +26,8 @@ type EpochBlock struct {
 	ParentEntropy []byte
 	/// Max non signers per block
 	MaxNonSigners uint32
+	/// Max validators per block
+	MaxValidators uint32
 	/// Serialized public keys of the validators in this epoch (each `PUBLIC_KEY_BYTES` long)
 	PublicKeys [][]byte
 }
@@ -67,8 +69,9 @@ func VerifyEpochs(
 		epoch_entropy:       firstEpochEntropy,
 		parent_entropy:      firstParentEntropy,
 		maximum_non_signers: C.uint(firstEpoch.MaxNonSigners),
-		pubkeys_num: C.ulong(len(firstEpoch.PublicKeys)),
-		pubkeys:     firstPublicKeysPtr,
+		maximum_validators:  C.ulong(len(firstEpoch.PublicKeys)),
+		pubkeys_num:         C.ulong(len(firstEpoch.PublicKeys)),
+		pubkeys:             firstPublicKeysPtr,
 	}
 
 	lastPublicKeysPtr, _ := vecToPtr(lastEpoch.PublicKeys)
@@ -77,8 +80,9 @@ func VerifyEpochs(
 		epoch_entropy:       lastEpochEntropy,
 		parent_entropy:      lastParentEntropy,
 		maximum_non_signers: C.uint(lastEpoch.MaxNonSigners),
-		pubkeys_num: C.ulong(len(firstEpoch.PublicKeys)),
-		pubkeys:     lastPublicKeysPtr,
+		maximum_validators:  C.ulong(len(lastEpoch.PublicKeys)),
+		pubkeys_num:         C.ulong(len(firstEpoch.PublicKeys)),
+		pubkeys:             lastPublicKeysPtr,
 	}
 
 	success := C.verify(
