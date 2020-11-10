@@ -192,18 +192,39 @@ func TestEncoding(t *testing.T) {
 	defer privateKey2.Destroy()
 	publicKey2, _ := privateKey2.ToPublic()
 
-	bytes, err := EncodeEpochToBytes(10, 20, []*PublicKey{publicKey, publicKey2})
+	var blockHash, parentHash EpochEntropy
+	copy(blockHash[:], "foo")
+	copy(parentHash[:], "bar")
+
+	fmt.Printf("Here blockhash %s parentHash %s\n", blockHash, parentHash)
+	bytes, err := EncodeEpochToBytes(10, blockHash, parentHash, 20, []*PublicKey{publicKey, publicKey2})
 	if err != nil {
 		t.Fatalf("failed encoding epoch bytes")
 	}
 	t.Logf("encoding: %s\n", hex.EncodeToString(bytes))
-	bytesWithApk, err := EncodeEpochToBytesWithAggregatedKey(10, 20, []*PublicKey{publicKey, publicKey2})
+	bytesWithApk, err := EncodeEpochToBytesWithAggregatedKey(10, blockHash, parentHash, 20, []*PublicKey{publicKey, publicKey2})
 	if err != nil {
 		t.Fatalf("failed encoding epoch bytes")
 	}
 	t.Logf("encoding with aggregated public key: %s\n", hex.EncodeToString(bytes))
 	if len(bytesWithApk) <= len(bytes) {
 		t.Fatalf("encoding with the aggregated public key should be larger")
+	}
+}
+
+func TestEncodingWithoutEntropy(t *testing.T) {
+	InitBLSCrypto()
+	privateKey, _ := GeneratePrivateKey()
+	defer privateKey.Destroy()
+	publicKey, _ := privateKey.ToPublic()
+
+	privateKey2, _ := GeneratePrivateKey()
+	defer privateKey2.Destroy()
+	publicKey2, _ := privateKey2.ToPublic()
+
+	_, err := EncodeEpochToBytesWithoutEntropy(10, 20, []*PublicKey{publicKey, publicKey2})
+	if err != nil {
+		t.Fatalf("failed encoding epoch bytes")
 	}
 }
 
@@ -252,11 +273,11 @@ func TestAggregateSignaturesErrors(t *testing.T) {
 func TestEncodeErrors(t *testing.T) {
 	InitBLSCrypto()
 
-	_, err := EncodeEpochToBytes(0, 0, []*PublicKey{})
+	_, err := EncodeEpochToBytes(0, EpochEntropy{}, EpochEntropy{}, 0, []*PublicKey{})
 	if err != EmptySliceError {
 		t.Fatalf("should have been an empty slice")
 	}
-	_, err = EncodeEpochToBytes(0, 0, nil)
+	_, err = EncodeEpochToBytes(0, EpochEntropy{}, EpochEntropy{}, 0, nil)
 	if err != EmptySliceError {
 		t.Fatalf("should have been an empty slice")
 	}

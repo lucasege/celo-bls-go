@@ -12,6 +12,8 @@ typedef struct {
    * The epoch's index
    */
   uint16_t index;
+  const uint8_t *epoch_entropy;
+  const uint8_t *parent_entropy;
   /**
    * Pointer to the public keys array
    */
